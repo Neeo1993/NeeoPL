@@ -1,0 +1,20 @@
+<li class="px-5 py-3 text-sm fade-in" id="expense-row-{{ e.id }}">
+  <div class="text-xs text-slate-500 mb-2">
+    Прибавить к факту «{{ e.title }}»<br>
+    <span class="text-slate-400">текущий факт: {{ e.fact | money }}</span>
+  </div>
+  <form class="flex gap-2 items-center"
+        hx-post="/expenses/{{ e.id }}/add-fact" hx-target="#period-body" hx-swap="outerHTML">
+    <input name="amount" type="number" step="0.01" min="0" placeholder="Сумма прибавления" required autofocus
+           class="flex-1 rounded-md border-slate-300 border px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+    <button type="submit" class="rounded-md bg-emerald-600 text-white hover:bg-emerald-500 transition grid place-items-center w-7 h-7" title="Прибавить">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </button>
+    <button type="button"
+           hx-get="/periods/{{ e.period_id }}/body"
+           hx-target="#period-body" hx-swap="outerHTML"
+           class="text-slate-300 hover:text-slate-500 transition grid place-items-center w-7 h-7" title="Отмена">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </form>
+</li>

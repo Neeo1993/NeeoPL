@@ -1,0 +1,44 @@
+{% set inc = period.total_income %}
+{% set plan = period.total_plan %}
+{% set fact = period.total_fact %}
+{% set sav = period.total_savings %}
+{% set d_exp = period.delta_expenses %}
+{% set d_ip = period.delta_income_plan %}
+{% set d_if = period.delta_income_fact %}
+
+<div class="space-y-4" id="summary">
+  <div class="grid sm:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Доходы</p>
+      <p class="mt-1 text-2xl font-semibold text-emerald-600">{{ inc | money }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Накопления</p>
+      <p class="mt-1 text-2xl font-semibold text-indigo-500">{{ sav | money }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Расходы</p>
+      <p class="mt-1 text-2xl font-semibold text-rose-500">{{ plan | money }}</p>
+      {% if fact == 0 %}
+      <p class="text-xs text-slate-300 mt-1">Факт: —</p>
+      {% else %}
+      <p class="text-xs text-amber-500 mt-1">Факт: {{ fact | money }} (Сальдо {{ d_exp | money }})</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="grid sm:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Сальдо доход − расход (план) − накопления</p>
+      <p class="mt-1 text-2xl font-semibold {{ 'text-emerald-600' if d_ip >= 0 else 'text-rose-500' }}">{{ d_ip | money }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <p class="text-xs uppercase tracking-wide text-slate-400">Сальдо доход − расход (факт) − накопления</p>
+      {% if fact == 0 %}
+      <p class="mt-1 text-2xl font-semibold text-slate-300">—</p>
+      <p class="text-xs text-slate-400 mt-1">факт ещё не введён</p>
+      {% else %}
+      <p class="mt-1 text-2xl font-semibold {{ 'text-emerald-600' if d_if >= 0 else 'text-rose-500' }}">{{ d_if | money }}</p>
+      {% endif %}
+    </div>
+  </div>
+</div>

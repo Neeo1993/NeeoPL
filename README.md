@@ -1,0 +1,134 @@
+# NeeoP&L
+
+Система для ведения учета доходов, расходов и накоплений (домашняя бухгалтерия). Считает план и факт по месяцам,
+показывает сальдо, копит резервы и рисует диаграмму куда ушли деньги.
+
+## Состав проекта
+
+```
+src/neeopl/
+  __init__.py            запуск uvicorn
+  app.py                 FastAPI-приложение, роуты, middleware авторизации
+  auth.py                хэширование паролей (bcrypt), подписанные куки
+  database.py            SQLAlchemy engine, конфиг, миграции схемы
+  models.py              Period, Income, Saving, Expense, ExpenseTemplate, User
+  crud.py                операции с БД, шаблоны расходов, палитра цветов
+  reset_password.py      утилита сброса пароля
+  source/                логотип и favicon
+  templates/
+    base.html            общий каркас: шапка, подвал, JS форматирования валюты
+    index.html           список периодов, итоговые виджеты
+    period.html          карточка периода
+    settings.html        настройки: валюта, путь к БД
+    login.html           форма входа
+    setup.html           создание администратора при первом запуске
+    partials/
+      period_body.html   тело карточки периода (доходы, накопления, расходы,
+                         диаграмма, формы добавления)
+      summary.html       виджеты сальдо
+      income_edit_row.html     inline-форма редактирования дохода
+      saving_edit_row.html     inline-форма редактирования накопления
+      expense_edit_row.html    inline-форма редактирования расхода
+      expense_add_fact_row.html  форма прибавления к факту
+data/                    папка с БД, логами и config.json (создаётся автоматически)
+```
+
+## Стек
+
+Бекенд - Python 3.14, FastAPI, SQLAlchemy, SQLite. 
+Фронтенд - Jinja2-шаблоны, HTMX, Tailwind CSS через CDN, Chart.js
+Зависимости - bcrypt, itsdangerous, python-multipart.
+
+## Развертывание
+
+Необходим Python 3.14 и менеджер пакетов uv. uv ставит изолированное
+окружение сам, отдельно venv создавать не надо.
+
+### Установка uv
+
+**macOS / Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://astral.sh/uv/install.ps1 | iex
+```
+
+После установки перезапустите терминал или выполните `source ~/.cargo/env`
+(macOS/Linux), чтобы uv появился в PATH.
+
+### Запуск проекта
+
+Перейдите в папку проекта и выполните:
+```bash
+uv run neeopl
+```
+
+uv сам скачает Python нужной версии, поставит зависимости из uv.lock и
+запустит сервер. Откройте http://127.0.0.1:8000 - при первом входе
+попросит создать администратора.
+
+Порт по умолчанию -- 8000. Чтобы сменить:
+```bash
+uv run uvicorn neeopl.app:create_app --factory --port 9000
+```
+
+### Автозапуск при загрузке системы
+
+В папке `scripts/` есть скрипты, которые делают всё сами: ставят uv, ставят
+зависимости, создают папку data и регистрируют службу в автозапуске. Запускать
+из папки проекта.
+
+**macOS:**
+```bash
+bash scripts/install-macos.sh
+```
+Создаёт launchd-агента `ai.neeopl.server` (KeepAlive, запуск при входе).
+Управление:
+```bash
+launchctl unload ~/Library/LaunchAgents/ai.neeopl.server.plist   # остановить
+launchctl load ~/Library/LaunchAgents/ai.neeopl.server.plist     # запустить
+tail -f data/neeopl-server.log                                    # логи
+```
+
+**Linux:**
+```bash
+bash scripts/install-linux.sh
+```
+Создаёт пользовательскую службу systemd `neeopl` и включает enable-linger,
+чтобы служба работала без логина. Управление:
+```bash
+systemctl --user stop neeopl      # остановить
+systemctl --user start neeopl     # запустить
+systemctl --user status neeopl    # статус
+journalctl --user -u neeopl -f    # логи
+```
+
+**Windows (PowerShell):**
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-windows.ps1
+```
+Создаёт задачу "NeeoPL" в планировщике задач (запуск при входе, авто-рестарт).
+Управление:
+```powershell
+Stop-ScheduledTask -TaskName "NeeoPL"                       # остановить
+Start-ScheduledTask -TaskName "NeeoPL"                      # запустить
+Get-ScheduledTask -TaskName "NeeoPL"                        # статус
+Unregister-ScheduledTask -TaskName "NeeoPL" -Confirm:$false # удалить
+```
+
+## Сброс пароля
+
+Если пароль администратора забыт, из папки проекта:
+```bash
+uv run python -m neeopl.reset_password admin новый_пароль
+```
+
+Или интерактивно (попросит логин и пароль с подтверждением):
+```bash
+uv run python -m neeopl.reset_password
+```
+
+После сброса перезапускать сервер не обязательно - новый пароль работает сразу.

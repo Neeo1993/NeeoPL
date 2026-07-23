@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight">Периоды</h1>
+  </div>
+
+  <button class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 transition"
+          onclick="document.getElementById('new-period').classList.toggle('hidden')">
+    <span class="text-lg leading-none">+</span> Новый период
+  </button>
+</div>
+
+<form id="new-period" method="post" action="/periods" class="hidden bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm grid sm:grid-cols-3 gap-3">
+  {{ csrf_field(request) }}
+  <label class="text-sm">
+    <span class="text-slate-600">Месяц</span>
+    <select name="month" class="mt-1 w-full rounded-md border-slate-300 border px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none">
+      {% for m in ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'] %}
+      <option value="{{ loop.index }}">{{ m }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="text-sm">
+    <span class="text-slate-600">Год</span>
+    <input name="year" type="number" value="2026" class="mt-1 w-full rounded-md border-slate-300 border px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+  </label>
+  <div class="flex items-end">
+    <button class="w-full rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 transition">Создать</button>
+  </div>
+</form>
+
+{% if periods %}
+<div class="grid sm:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-400">Доходы (итого)</p>
+    <p class="mt-1 text-2xl font-semibold text-emerald-600">{{ totals.income | money }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-400">Расходы (итого)</p>
+    <p class="mt-1 text-2xl font-semibold text-rose-500">{{ totals.fact | money }}</p>
+  </div>
+  <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-400">Накопления (итого)</p>
+    <p class="mt-1 text-2xl font-semibold text-indigo-500">{{ totals.savings | money }}</p>
+  </div>
+</div>
+
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {% for p in periods %}
+  <div class="relative bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-indigo-300 transition fade-in">
+    <a href="/periods/{{ p.id }}" class="after:absolute after:inset-0" title="Открыть период"></a>
+    <div class="relative flex items-center justify-between">
+      <span class="text-xs font-medium uppercase tracking-wide text-indigo-500">{{ p.year }}</span>
+      <form method="post" action="/periods/{{ p.id }}/delete"
+            onsubmit="return confirm('Удалить период «{{ p.title }}» и все его записи?')"
+            class="relative z-10">
+        {{ csrf_field(request) }}
+        <button type="submit" class="text-slate-300 hover:text-rose-500 transition" title="Удалить период">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+        </button>
+      </form>
+    </div>
+    <h3 class="mt-1 text-lg font-semibold">{{ p.title }}</h3>
+    <div class="mt-4 flex items-center justify-between text-sm">
+      <span class="text-slate-500">Доходы: <b class="text-emerald-600">{{ p.total_income | money }}</b></span>
+      <span class="text-slate-500">Расходы: <b class="text-rose-500">{{ p.total_fact | money }}</b></span>
+    </div>
+    <div class="mt-1 flex items-center justify-between text-sm">
+      <span class="text-slate-500">Накопления: <b class="text-indigo-500">{{ p.total_savings | money }}</b></span>
+      {% set d = p.delta_income_fact %}
+      <span class="text-slate-500">Сальдо: <b class="{{ 'text-emerald-600' if d >= 0 else 'text-rose-500' }}">{{ d | money }}</b></span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
+  <p class="text-slate-500">Пока нет ни одного периода.</p>
+  <p class="text-sm text-slate-400 mt-1">Создайте первый — кнопкой выше.</p>
+</div>
+{% endif %}
+
+{% endblock %}

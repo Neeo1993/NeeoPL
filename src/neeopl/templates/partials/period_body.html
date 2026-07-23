@@ -1,0 +1,218 @@
+<section id="period-body" class="grid lg:grid-cols-2 gap-6">
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-semibold text-slate-700">Доходы</h2>
+      <span class="text-sm text-slate-400">сумма: <b class="text-emerald-600">{{ period.total_income | money }}</b></span>
+    </div>
+
+    <ul class="divide-y divide-slate-100" id="incomes-list">
+      {% for inc in period.incomes %}
+      <li class="flex items-center justify-between px-5 py-3 text-sm fade-in" id="income-row-{{ inc.id }}">
+        <span class="text-slate-700">{{ inc.title }}</span>
+        <span class="flex items-center gap-3">
+          <b class="text-emerald-600">{{ inc.amount | money }}</b>
+          <button hx-get="/incomes/{{ inc.id }}/edit" hx-target="#income-row-{{ inc.id }}" hx-swap="outerHTML"
+                  class="text-slate-300 hover:text-indigo-500 transition" title="Изменить">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button hx-delete="/incomes/{{ inc.id }}" hx-target="#period-body" hx-swap="outerHTML"
+                  class="text-slate-300 hover:text-rose-500 transition" title="Удалить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+          </button>
+        </span>
+      </li>
+      {% else %}
+      <li class="px-5 py-6 text-center text-sm text-slate-400">Нет доходов</li>
+      {% endfor %}
+    </ul>
+
+    <form class="p-4 border-t border-slate-100 bg-slate-50/50 flex gap-2"
+          hx-post="/periods/{{ period.id }}/incomes" hx-target="#period-body" hx-swap="outerHTML">
+      <input name="title" type="text" placeholder="Источник" required
+             class="flex-1 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+      <input name="amount" type="number" step="0.01" min="0" placeholder="Сумма" required
+             class="w-28 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+      <button class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-500 transition">+</button>
+    </form>
+    {% if period.total_all_savings > 0 %}
+    <form class="px-4 pb-4 flex flex-wrap items-center gap-2 text-xs"
+          hx-post="/periods/{{ period.id }}/dip-savings" hx-target="#period-body" hx-swap="outerHTML"
+          hx-confirm="Залезть в накопления? Будет создана запись в доходах и компенсирующая отрицательная запись в накоплениях.">
+      <span class="text-slate-500">Доступно накоплений: <b class="text-indigo-500">{{ period.total_all_savings | money }}</b></span>
+      <input name="amount" type="number" step="0.01" min="0" max="{{ period.total_all_savings }}" placeholder="Сумма" required
+             class="w-28 rounded-md border-slate-300 border px-2 py-1 text-xs focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+      <button type="submit" class="rounded-md bg-amber-500 px-3 py-1 text-white hover:bg-amber-400 transition">Залезть в накопления</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-semibold text-slate-700">Накопления</h2>
+      <span class="text-sm text-slate-400">сумма: <b class="text-indigo-500">{{ period.total_savings | money }}</b></span>
+    </div>
+
+    <ul class="divide-y divide-slate-100" id="savings-list">
+      {% for s in period.savings %}
+      <li class="flex items-center justify-between px-5 py-3 text-sm fade-in" id="saving-row-{{ s.id }}">
+        <span class="text-slate-700">{{ s.title }}</span>
+        <span class="flex items-center gap-3">
+          <b class="{{ 'text-slate-400' if s.amount < 0 else 'text-indigo-500' }}">{{ s.amount | money }}</b>
+          <button hx-get="/savings/{{ s.id }}/edit" hx-target="#saving-row-{{ s.id }}" hx-swap="outerHTML"
+                  class="text-slate-300 hover:text-indigo-500 transition" title="Изменить">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button hx-delete="/savings/{{ s.id }}" hx-target="#period-body" hx-swap="outerHTML"
+                  class="text-slate-300 hover:text-rose-500 transition" title="Удалить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+          </button>
+        </span>
+      </li>
+      {% else %}
+      <li class="px-5 py-6 text-center text-sm text-slate-400">Нет накоплений</li>
+      {% endfor %}
+    </ul>
+
+    <form class="p-4 border-t border-slate-100 bg-slate-50/50 flex gap-2"
+          hx-post="/periods/{{ period.id }}/savings" hx-target="#period-body" hx-swap="outerHTML">
+      <input name="title" type="text" placeholder="Назначение" value="Накопления"
+             class="flex-1 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+      <input name="amount" type="number" step="0.01" min="0" placeholder="Сумма" required
+             class="w-28 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+      <button class="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-500 transition">+</button>
+    </form>
+  </div>
+
+  <div class="lg:col-span-2 grid lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-semibold text-slate-700">Расходы</h2>
+        <span class="text-sm text-slate-400">план/факт: <b class="text-rose-500">{{ period.total_plan | money }}</b> / <b class="text-amber-500">{{ period.total_fact | money }}</b></span>
+      </div>
+
+      <ul class="divide-y divide-slate-100" id="expenses-list">
+        {% for e in period.expenses %}
+        <li class="px-5 py-3 text-sm fade-in {{ 'opacity-50' if e.done }}" id="expense-row-{{ e.id }}">
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <input type="checkbox" {{ 'checked' if e.done }}
+                     hx-post="/expenses/{{ e.id }}/toggle-done" hx-target="#period-body" hx-swap="outerHTML"
+                     class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 cursor-pointer"
+                     title="Завершена"/>
+              <span class="{{ 'text-slate-400 line-through' if e.done else 'text-slate-700 font-medium' }}">{{ e.title }}</span>
+            </span>
+            {% if not e.done %}
+            <span class="flex items-center gap-2">
+              <button hx-get="/expenses/{{ e.id }}/history" hx-target="#expense-row-{{ e.id }}" hx-swap="outerHTML"
+                      class="text-slate-300 hover:text-amber-500 transition" title="История пополнений">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </button>
+              <button hx-get="/expenses/{{ e.id }}/add-fact" hx-target="#expense-row-{{ e.id }}" hx-swap="outerHTML"
+                      class="text-slate-300 hover:text-emerald-500 transition" title="Прибавить к факту">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+              <button hx-get="/expenses/{{ e.id }}/edit" hx-target="#expense-row-{{ e.id }}" hx-swap="outerHTML"
+                      class="text-slate-300 hover:text-indigo-500 transition" title="Изменить">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button hx-delete="/expenses/{{ e.id }}" hx-target="#period-body" hx-swap="outerHTML"
+                      class="text-slate-300 hover:text-rose-500 transition" title="Удалить">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+              </button>
+            </span>
+            {% endif %}
+          </div>
+          <div class="mt-1 grid grid-cols-3 gap-2 text-xs {{ 'text-slate-400' if e.done }}">
+            <span>План: <b class="{{ 'text-slate-400' if e.done else 'text-rose-500' }}">{{ e.plan | money }}</b></span>
+            <span>Факт: <b class="{{ 'text-slate-300' if e.fact == 0 or e.done else 'text-amber-500' }}">{{ '—' if e.fact == 0 else e.fact | money }}</b></span>
+            <span>Сальдо: <b class="{{ 'text-slate-300' if e.fact == 0 or e.done else ('text-emerald-600' if e.delta <= 0 else 'text-rose-500') }}">{{ '—' if e.fact == 0 else e.delta | money }}</b></span>
+          </div>
+        </li>
+        {% else %}
+        <li class="px-5 py-6 text-center text-sm text-slate-400">Нет расходов</li>
+        {% endfor %}
+      </ul>
+
+      <datalist id="expense-templates">
+        {% for t in period.expense_templates %}
+        <option value="{{ t.title }}" data-plan="{{ t.plan }}"></option>
+        {% endfor %}
+      </datalist>
+
+      <form class="p-4 border-t border-slate-100 bg-slate-50/50 grid grid-cols-12 gap-2"
+            hx-post="/periods/{{ period.id }}/expenses" hx-target="#period-body" hx-swap="outerHTML">
+        <input name="title" type="text" placeholder="Статья" required list="expense-templates"
+               class="col-span-5 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+        <input name="plan" type="number" step="0.01" min="0" placeholder="План" required
+               class="col-span-3 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+        <input name="fact" type="number" step="0.01" min="0" placeholder="Факт"
+               class="col-span-3 rounded-md border-slate-300 border px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"/>
+        <button class="col-span-1 rounded-md bg-indigo-600 text-white hover:bg-indigo-500 transition text-sm">+</button>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-semibold text-slate-700">Структура фактических расходов</h2>
+      </div>
+      <div class="p-5 flex-1 flex items-center justify-center">
+        <canvas id="expense-chart" class="max-h-72"></canvas>
+      </div>
+      <script id="expense-chart-data" type="application/json">
+        {{ period.chart | tojson }}
+      </script>
+      <script>
+        (function () {
+          const el = document.getElementById('expense-chart');
+          if (!el || el.__chart) return;
+          const raw = document.getElementById('expense-chart-data');
+          const data = JSON.parse(raw.textContent).filter(d => d.fact > 0);
+          if (!data.length) {
+            el.parentElement.innerHTML = '<div class="text-sm text-slate-400 text-center">Нет данных<br><span class="text-xs">введите факт по расходам</span></div>';
+            return;
+          }
+          const labels = data.map(d => d.title);
+          const values = data.map(d => d.fact);
+          const colors = data.map(d => d.color);
+          const chart = new Chart(el, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '62%',
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  onClick: function (e, item, legend) {
+                    const ci = legend.chart;
+                    const idx = item.index;
+                    ci.toggleDataVisibility(idx);
+                    ci.update();
+                    item.hidden = !ci.getDataVisibility(idx);
+                  },
+                  labels: { boxWidth: 12, boxHeight: 12, padding: 12, font: { size: 11 } }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function (ctx) {
+                      const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                      const v = ctx.parsed;
+                      const pct = total ? (v / total * 100).toFixed(1) : 0;
+                      return ` ${ctx.label}: ${moneyFmt(v)} (${pct}%)`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+          el.__chart = chart;
+        })();
+      </script>
+    </div>
+  </div>
+
+  <div class="lg:col-span-2">
+    {% include "partials/summary.html" %}
+  </div>
+</section>

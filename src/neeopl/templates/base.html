@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>NeeoP&L</title>
+  <link rel="icon" href="/source/favicon.ico" sizes="any"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="/source/favicon-32.png"/>
+  <link rel="icon" type="image/png" sizes="64x64" href="/source/favicon-64.png"/>
+  <link rel="icon" type="image/png" sizes="128x128" href="/source/favicon-128.png"/>
+  <link rel="icon" type="image/png" sizes="256x256" href="/source/favicon-256.png"/>
+  <link rel="apple-touch-icon" sizes="256x256" href="/source/favicon-256.png"/>
+  <meta name="currency-symbol" content="{{ currency_symbol }}"/>
+  <meta name="currency-prefix" content="{{ '1' if currency_symbol in ('$', '€') else '0' }}"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fade .25s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform: none;} }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+<div class="max-w-5xl mx-auto px-4 py-8">
+  <header class="flex items-center justify-between mb-8">
+    <a href="/" class="flex items-center gap-2 group">
+      <img src="/source/logo.png" alt="NeeoP&L" class="w-12 h-12 rounded-xl shadow-sm group-hover:scale-105 transition object-cover"/>
+      <span class="text-xl font-semibold tracking-tight">NeeoP<span class="text-indigo-500">&amp;</span>L</span>
+    </a>
+    {% if request.state.uid is defined %}
+    <div class="flex items-center gap-4">
+      <a href="/settings" class="text-slate-400 hover:text-indigo-500 transition" title="Настройки">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </a>
+      <form method="post" action="/logout">
+        {{ csrf_field(request) }}
+        <button type="submit" class="text-slate-400 hover:text-rose-500 transition text-sm" title="Выйти">
+          Выйти
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="mt-16 text-center text-xs text-slate-400">NeeoP<span class="text-indigo-500">&amp;</span>L — домашний P<span class="text-indigo-500">&amp;</span>L</footer>
+</div>
+<script>
+  function moneyFmt(v) {
+    const n = Number(v) || 0;
+    const s = n.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const sym = document.querySelector('meta[name="currency-symbol"]')?.content || '₽';
+    const prefix = document.querySelector('meta[name="currency-prefix"]')?.content === '1';
+    return prefix ? sym + s : s + '\u00A0' + sym;
+  }
+  document.addEventListener('htmx:configRequest', function(ev) {
+    const csrf = document.cookie.match(/neeopl_csrf=([^;]+)/);
+    if (csrf) ev.detail.headers['X-CSRF-Token'] = csrf[1];
+  });
+  document.addEventListener('input', function(ev) {
+    const el = ev.target;
+    if (el.tagName === 'INPUT' && el.getAttribute('list') === 'expense-templates') {
+      const dl = document.getElementById('expense-templates');
+      if (!dl) return;
+      const opt = Array.from(dl.options).find(o => o.value === el.value);
+      if (opt) {
+        const form = el.closest('form');
+        const plan = form && form.querySelector('input[name="plan"]');
+        if (plan && opt.dataset.plan) plan.value = opt.dataset.plan;
+      }
+    }
+  });
+</script>
+</body>
+</html>
