@@ -1,6 +1,6 @@
 [project]
 name = "neeopl"
-version = "1.0.0"
+version = "0.1.0"
 description = "Домашний учёт доходов, расходов и накоплений"
 readme = "README.md"
 requires-python = ">=3.14"

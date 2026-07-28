@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PORT=8000
+PORT=24898
 LABEL="ai.neeopl.server"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
@@ -26,9 +26,10 @@ uv sync
 
 mkdir -p "$PROJECT_DIR/data"
 
-if launchctl list &>/dev/null | grep -q "$LABEL"; then
+if launchctl list 2>/dev/null | grep -q "$LABEL"; then
     echo "Останавливаю старую службу..."
     launchctl unload "$PLIST" 2>/dev/null || true
+    sleep 1
 fi
 
 echo "Создаём службу launchd..."
